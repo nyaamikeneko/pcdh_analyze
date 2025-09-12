@@ -1,0 +1,14 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+
+# データフォルダ（プロジェクト内にデータは置かないが念のため）
+data/
+
+# 結果ファイル（必要に応じて解除）
+results/
+
+# IDE/Editor specific
+.vscode/
+.idea/
