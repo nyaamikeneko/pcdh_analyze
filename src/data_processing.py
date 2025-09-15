@@ -14,8 +14,14 @@ def process_eeg_to_df(data: np.ndarray) -> pd.DataFrame:
     channel_names = ['PFC', 'PPC', 'A1', 'V1', 'Stimulus']
     df = pd.DataFrame(data.T, columns=channel_names)
 
+    # --- ここから追加 ---
+    # Time_s列を追加 (サンプリングレートを1000Hzと仮定)
+    sampling_rate = 1000
+    df['Time_s'] = df.index / sampling_rate
+    # --- ここまで追加 ---
+    
     # 3. 刺激ラベルの付与
-    is_stim_on = df['Stimulus'] > 0
+    is_stim_on = df['Stimulus'] > 5
     stim_starts = is_stim_on & ~is_stim_on.shift(1).fillna(False)
     event_ids = stim_starts.cumsum()
     df['Event_ID'] = event_ids.where(is_stim_on, 0)
