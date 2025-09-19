@@ -3,24 +3,57 @@
 import numpy as np
 import pandas as pd
 from pathlib import Path
-import os
-from .config import DATA_DIR
+from scipy.signal import butter, filtfilt
+
+# --- config.pyから設定値をまとめてインポート ---
+# 👈 必要な設定値をすべて読み込む
+from .config import (
+    DATA_DIR,
+    SAMPLING_RATE,
+    RAW_CHANNEL_NAMES,
+    EEG_CHANNELS_TO_FILTER,
+    FILTER_LOWCUT,
+    FILTER_HIGHCUT,
+    FILTER_ORDER
+)
+
+def bandpass_filter(data, lowcut, highcut, fs, order=4):
+    """
+    データにバンドパスフィルタを適用する関数。
+    (この関数自体に変更はありません)
+    """
+    data = np.asarray(data, dtype=np.float64)
+    nyq = 0.5 * fs
+    low = lowcut / nyq
+    high = highcut / nyq
+    b, a = butter(order, [low, high], btype='band')
+    y = filtfilt(b, a, data)
+    return y
 
 def process_eeg_to_df(data: np.ndarray) -> pd.DataFrame:
     """
-    Numpy配列を受け取り、ラベル付けされたDataFrameを返す内部処理用の関数。
+    Numpy配列を受け取り、ラベル付けとフィルタリング処理をしたDataFrameを返す。
     """
-    # 2. チャネル名の設定
-    channel_names = ['PFC', 'PPC', 'A1', 'V1', 'Stimulus']
-    df = pd.DataFrame(data.T, columns=channel_names)
+    # configから読み込んだチャンネル名リストを使用
+    df = pd.DataFrame(data.T, columns=RAW_CHANNEL_NAMES) # 👈 変更
 
-    # --- ここから追加 ---
-    # Time_s列を追加 (サンプリングレートを1000Hzと仮定)
-    sampling_rate = 1000
-    df['Time_s'] = df.index / sampling_rate
-    # --- ここまで追加 ---
+    # configから読み込んだサンプリングレートを使用
+    df['Time_s'] = df.index / SAMPLING_RATE # 👈 変更
     
-    # 3. 刺激ラベルの付与
+    # --- フィルタ処理 ---
+    # configから読み込んだチャンネルリストをループ
+    for channel in EEG_CHANNELS_TO_FILTER: # 👈 変更
+        filtered_col_name = f'{channel}_filtered'
+        # configから読み込んだフィルタパラメータを使用
+        df[filtered_col_name] = bandpass_filter( # 👈 変更
+            data=df[channel],
+            lowcut=FILTER_LOWCUT,
+            highcut=FILTER_HIGHCUT,
+            fs=SAMPLING_RATE,
+            order=FILTER_ORDER
+        )
+    
+    # --- 刺激ラベルの付与 (ここは変更なし) ---
     is_stim_on = df['Stimulus'] > 5
     stim_starts = is_stim_on & ~is_stim_on.shift(1).fillna(False)
     event_ids = stim_starts.cumsum()
