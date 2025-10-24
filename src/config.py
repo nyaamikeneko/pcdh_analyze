@@ -5,10 +5,8 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).parent.parent 
 
 # --- パス設定 ---
-# 💥修正点: 実際のデータがあるGoogleドライブのパスを直接指定します
 DATA_DIR = Path("G:/マイドライブ/ALL_EEG_pdch15") 
-PROCESSED_DIR = PROJECT_ROOT / "data" / "processed" # 処理後のデータはローカルに保存でOK
-
+PROCESSED_DIR = Path("G:/マイドライブ/ALL_EEG_pdch15/processed") # 処理後のデータはローカルに保存でOK
 
 # --- データ仕様に関する設定 ---
 SAMPLING_RATE = 1000

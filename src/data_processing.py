@@ -1,9 +1,8 @@
-# src/data_processing.py
-
 import numpy as np
 import pandas as pd
 from pathlib import Path
 from scipy.signal import butter, filtfilt
+import re  # 👈 正規表現ライブラリをインポート
 
 # --- config.pyから設定値をまとめてインポート ---
 # 👈 必要な設定値をすべて読み込む
@@ -33,19 +32,20 @@ def bandpass_filter(data, lowcut, highcut, fs, order=4):
 def process_eeg_to_df(data: np.ndarray) -> pd.DataFrame:
     """
     Numpy配列を受け取り、ラベル付けとフィルタリング処理をしたDataFrameを返す。
+    (この関数自体に変更はありません)
     """
     # configから読み込んだチャンネル名リストを使用
-    df = pd.DataFrame(data.T, columns=RAW_CHANNEL_NAMES) # 👈 変更
+    df = pd.DataFrame(data.T, columns=RAW_CHANNEL_NAMES) 
 
     # configから読み込んだサンプリングレートを使用
-    df['Time_s'] = df.index / SAMPLING_RATE # 👈 変更
+    df['Time_s'] = df.index / SAMPLING_RATE 
     
     # --- フィルタ処理 ---
     # configから読み込んだチャンネルリストをループ
-    for channel in EEG_CHANNELS_TO_FILTER: # 👈 変更
+    for channel in EEG_CHANNELS_TO_FILTER: 
         filtered_col_name = f'{channel}_filtered'
         # configから読み込んだフィルタパラメータを使用
-        df[filtered_col_name] = bandpass_filter( # 👈 変更
+        df[filtered_col_name] = bandpass_filter( 
             data=df[channel],
             lowcut=FILTER_LOWCUT,
             highcut=FILTER_HIGHCUT,
@@ -69,12 +69,39 @@ def process_eeg_to_df(data: np.ndarray) -> pd.DataFrame:
     
     return df
 
+def _extract_metadata_from_filename(filename_stem: str):
+    """
+    ファイル名のステムから Subject_ID と Genotype を抽出するヘルパー関数。
+    """
+    # Subject_ID (2-3桁の数字) を抽出
+    id_match = re.search(r'(\d{2,3})', filename_stem)
+    subject_id = id_match.group(1) if id_match else "Unknown_ID"
+    
+    # Genotype (wt, het, homo) を抽出 (大文字小文字を区別しない)
+    geno_match = re.search(r'(wt|het|homo)', filename_stem, re.IGNORECASE)
+    
+    genotype = "Unknown_Geno"
+    if geno_match:
+        raw_geno = geno_match.group(1).lower()
+        # 表記を統一 (wt -> WT, het -> Het, homo -> Homo)
+        if raw_geno == 'wt':
+            genotype = 'WT'
+        elif raw_geno == 'het':
+            genotype = 'Het'
+        elif raw_geno == 'homo':
+            genotype = 'Homo'
+            
+    return subject_id, genotype
+
 def create_processed_file(filename: str, processed_dir: Path):
     """
     単一の.npyファイルを読み込み、処理してParquet形式で保存する関数。
+    (👈 メタデータを追加するよう修正)
     """
-    # 出力パスを生成 (例: wt262avs.adicht_rec2.parquet)
-    output_path = processed_dir / f"{Path(filename).stem}.parquet"
+    filename_stem = Path(filename).stem
+    
+    # 出力パスを生成 (例: 203wt~.parquet)
+    output_path = processed_dir / f"{filename_stem}.parquet"
     
     # すでに処理済みファイルが存在する場合はスキップ
     if output_path.exists():
@@ -89,6 +116,13 @@ def create_processed_file(filename: str, processed_dir: Path):
     # 2. DataFrameに変換してラベル付け
     processed_df = process_eeg_to_df(raw_data)
     
-    # 3. Parquet形式で保存
+    # 3. 👈 ファイル名からメタデータ（IDとGenotype）を抽出
+    subject_id, genotype = _extract_metadata_from_filename(filename_stem)
+    
+    # 4. 👈 DataFrameにメタデータを列として追加
+    processed_df['Subject_ID'] = subject_id
+    processed_df['Genotype'] = genotype
+    
+    # 5. Parquet形式で保存
     processed_df.to_parquet(output_path)
-    print(f"  -> '{output_path.name}' として保存しました。")
+    print(f"  -> '{output_path.name}' として保存しました。(ID: {subject_id}, Genotype: {genotype})")
