@@ -6,10 +6,17 @@ import os
 PROJECT_ROOT = Path(__file__).parent.parent
 
 # --- パス設定 ---
-# 環境変数があれば優先して使い、なければプロジェクト内の data フォルダを参照
-DATA_DIR = Path(os.environ.get("EEG_DATA_DIR", PROJECT_ROOT / "data" / "raw"))
-PROCESSED_DIR = Path(os.environ.get("EEG_PROCESSED_DIR", PROJECT_ROOT / "data" / "processed"))
-PROCESSED_DIR.mkdir(parents=True, exist_ok=True)
+
+# データの読み込み元を Gドライブ の指定パスに固定
+DATA_DIR = Path(r"G:\マイドライブ\ALL_EEG_pcdh15")
+
+# データの保存先をローカルPCの指定された固定パスに設定
+PROCESSED_DIR = Path(r"C:\Users\dmasu\OneDrive\デスクトップ\pcdh_analyze\data\processed")
+
+# data_processing.py で import されている可能性があるため、
+# エラー回避のために None を設定
+SOURCE_DATA_DIR = None
+LOCAL_DATA_DIR = None
 
 # --- データ仕様に関する設定 ---
 SAMPLING_RATE = int(os.environ.get("EEG_SAMPLING_RATE", 1000))

@@ -1,3 +1,4 @@
+# notebooks/_init_notebook.py
 """
 Helper to initialize notebook environment for this project.
 Usage: import notebooks._init_notebook  # will ensure project root is on sys.path

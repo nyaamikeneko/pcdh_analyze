@@ -1,5 +1,6 @@
 import logging
 import os
+import shutil
 import numpy as np
 import pandas as pd
 from pathlib import Path
@@ -147,10 +148,12 @@ def create_processed_file(filename: str, processed_dir: Path = None, overwrite: 
         return
 
     file_path = DATA_DIR / filename
-    if not file_path.exists():
-        logger.error("Input file not found: %s", file_path)
-        raise FileNotFoundError(file_path)
 
+    if not file_path.exists():
+        # 簡略化されたエラーハンドリング
+        logger.error("Input file not found: %s", file_path)
+        raise FileNotFoundError(f"指定されたパスにファイルが見つかりません: {file_path}")
+  
     logger.info("Processing '%s' -> '%s'", file_path.name, output_path.name)
 
     # safe load (support .npy, .npz maybe)
