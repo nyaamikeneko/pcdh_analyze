@@ -40,7 +40,7 @@ EVENT_RANGES = {
 }
 
 # --- 解析パラメータ ---
-FREQS = list(range(4, 40))  # 4Hz〜39Hz
+FREQS = list(range(2, 40))  # 4Hz〜39Hz
 TMIN = -0.5
 TMAX = 1.5
 BASELINE = (-0.4, -0.1)
@@ -53,8 +53,9 @@ DEFAULT_FIGSIZE = (8, 6)
 
 # 周波数帯の名前定義（可読性のためのラベルと周波数レンジ）
 FREQ_BANDS = {
+    'Delta (2-4 Hz)': (2, 4),
 	'Theta (4-8 Hz)': (4, 8),
 	'Alpha (8-13 Hz)': (8, 13),
 	'Beta (13-30 Hz)': (13, 30),
-	'Gamma (30-45 Hz)': (30, 45)
+	'Gamma (30-40 Hz)': (30, 40)
 }
