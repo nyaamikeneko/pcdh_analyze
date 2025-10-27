@@ -1,3 +1,4 @@
+# src/plot_utils.py
 import numpy as np
 import matplotlib.pyplot as plt
 import japanize_matplotlib # 日本語表示のため
