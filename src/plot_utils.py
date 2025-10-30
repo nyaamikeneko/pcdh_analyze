@@ -1,8 +1,13 @@
+# src/plot_utils.py
 import numpy as np
 import matplotlib.pyplot as plt
 import japanize_matplotlib # 日本語表示のため
+from typing import Iterable, Optional
 
-def plot_erp_with_dynamic_window(df, start_id, end_id, pre_stim_ms=200, post_offset_ms=50, title=""):
+from .config import EEG_CHANNELS_TO_FILTER
+
+
+def plot_erp_with_dynamic_window(df, start_id, end_id, pre_stim_ms=200, post_offset_ms=50, title="", eeg_channels: Optional[Iterable[str]] = None):
     """
     加算平均波形をプロットする。表示範囲は刺激終了後、指定時間まで動的に調整される。
     
@@ -14,7 +19,9 @@ def plot_erp_with_dynamic_window(df, start_id, end_id, pre_stim_ms=200, post_off
         post_offset_ms (int): 刺激 "終了後" の描画期間 (ms)
         title (str): グラフ全体のタイトル
     """
-    eeg_channels = ['PFC', 'PPC', 'A1', 'V1']
+    # チャンネルリストを引数経由で受け取り、指定がなければ config の設定を使う
+    if eeg_channels is None:
+        eeg_channels = list(EEG_CHANNELS_TO_FILTER)
     
     # ステップ1: まず平均刺激持続時間を計算
     stim_durations_ms = []
